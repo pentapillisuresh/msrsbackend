@@ -1,0 +1,43 @@
+{
+  "name": "msrsbackend",
+  "version": "1.0.0",
+  "description": "temple managment",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pentapillisuresh/msrsbackend.git"
+  },
+  "keywords": [
+    "temple",
+    "trust",
+    "managment"
+  ],
+  "author": "ARK",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pentapillisuresh/msrsbackend/issues"
+  },
+  "homepage": "https://github.com/pentapillisuresh/msrsbackend#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.0",
+    "fs-extra": "^11.3.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3",
+    "nodemon": "^3.1.10",
+    "path": "^0.12.7",
+    "sequelize": "^6.37.7"
+  }
+}
