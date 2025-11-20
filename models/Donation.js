@@ -47,6 +47,11 @@ const Donation = sequelize.define('Donation', {
     allowNull: true
   },
 
+  amount: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
+
   donorAddress: {
     type: DataTypes.TEXT,
     allowNull: true
