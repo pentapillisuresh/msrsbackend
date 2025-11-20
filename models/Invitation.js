@@ -60,7 +60,7 @@ const Invitation = sequelize.define('Invitation', {
     defaultValue: true
   }
 }, {
-  tableName: 'invitations',
+  tableName: 'invitations', 
   timestamps: true
 });
 
@@ -78,6 +78,6 @@ Invitation.beforeCreate(async (invitation, options) => {
 
   const padded = String(nextNumber).padStart(4, '0'); // VOL-0001, VOL-0002, etc.
   invitation.invitationId = `EVT-${padded}`;
-})
+});
 
 module.exports = Invitation;
