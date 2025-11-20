@@ -27,17 +27,22 @@ const invitationValidation = [
 // Get all invitations (public)
 router.get('/', async (req, res) => {
   try {
-    const { status = 'published', category } = req.query;
-    
-    // const whereClause = { status, isActive: true };
-    // if (category) {
-    //   whereClause.category = category;
-    // }
+    const { status, category } = req.query;
 
-    
+    const whereClause = {};
+
+    // Add status only if provided
+    if (status) {
+      whereClause.status = status;
+    }
+
+    // Add category only if provided
+    if (category) {
+      whereClause.category = category;
+    }
 
     const invitations = await Invitation.findAll({
-      // where: whereClause,
+      where: Object.keys(whereClause).length ? whereClause : undefined,
       order: [['eventDate', 'ASC']]
     });
 
