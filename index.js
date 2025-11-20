@@ -22,6 +22,7 @@ const eLibraryRoutes = require('./routes/elibrary');
 const uploadRoutes = require('./routes/upload');
 const eventCategory = require('./routes/eventCategory');
 const AstrologyConsultation = require('./routes/astrologyConsultationRoutes');
+const Donation = require('./routes/Donation');
 
 const app = express();
 
@@ -87,6 +88,7 @@ app.use('/api/elibrary', eLibraryRoutes);
 app.use('/api/eventCategory', eventCategory);
 app.use('/api/Astrology', AstrologyConsultation);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/Donation', Donation);
 
 // Health check route
 app.get('/api/health', (req, res) => {
