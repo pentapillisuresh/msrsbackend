@@ -65,18 +65,19 @@ const Invitation = sequelize.define('Invitation', {
 });
 
 Invitation.beforeCreate(async (invitation, options) => {
-  const lastinvitation = await invitation.findOne({
+  // Use the model, not the instance
+  const lastInvitation = await Invitation.findOne({
     order: [['createdAt', 'DESC']]
   });
 
   let nextNumber = 1;
-  if (lastinvitation && lastinvitation.invitationId) {
-    const lastNumber = parseInt(lastinvitation.invitationId.replace('EVT-', ''), 10);
+  if (lastInvitation && lastInvitation.invitationId) {
+    const lastNumber = parseInt(lastInvitation.invitationId.replace('EVT-', ''), 10);
     nextNumber = lastNumber + 1;
   }
 
   const padded = String(nextNumber).padStart(4, '0'); // VOL-0001, VOL-0002, etc.
-  invitation.invitationId = `VOL-${padded}`;
-});
+  invitation.invitationId = `EVT-${padded}`;
+})
 
 module.exports = Invitation;

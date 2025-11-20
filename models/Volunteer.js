@@ -7,23 +7,27 @@ const Volunteer = sequelize.define('Volunteer', {
     primaryKey: true,
     autoIncrement: true
   },
-
-  // 👇 Add this custom ID field
   volunteerId: {
     type: DataTypes.STRING(20),
     allowNull: false,
     unique: true
   },
-
   name: {
     type: DataTypes.STRING(100),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'Name cannot be empty'
+      }
+    }
   },
   email: {
     type: DataTypes.STRING(100),
     allowNull: true,
     validate: {
-      isEmail: true
+      isEmail: {
+        msg: 'Please provide a valid email address'
+      }
     }
   },
   qualification: {
@@ -36,7 +40,13 @@ const Volunteer = sequelize.define('Volunteer', {
   },
   gender: {
     type: DataTypes.ENUM('male', 'female', 'other'),
-    allowNull: true
+    allowNull: true,
+    validate: {
+      isIn: {
+        args: [['male', 'female', 'other']],
+        msg: 'Gender must be male, female, or other'
+      }
+    }
   },
   bloodGroup: {
     type: DataTypes.STRING(15),
@@ -44,11 +54,17 @@ const Volunteer = sequelize.define('Volunteer', {
   },
   isBloodDonor: {
     type: DataTypes.BOOLEAN,
-    allowNull: true
+    allowNull: true,
+    defaultValue: false
   },
   dateOfBirth: {
     type: DataTypes.DATEONLY,
-    allowNull: true
+    allowNull: true,
+    validate: {
+      isDate: {
+        msg: 'Please provide a valid date of birth'
+      }
+    }
   },
   address: {
     type: DataTypes.TEXT,
@@ -56,24 +72,52 @@ const Volunteer = sequelize.define('Volunteer', {
   },
   phoneNumber: {
     type: DataTypes.STRING(15),
-    allowNull: true
+    allowNull: true,
+    validate: {
+      is: {
+        args: /^[\+]?[0-9\s\-\(\)]{10,15}$/,
+        msg: 'Please provide a valid phone number'
+      }
+    }
   },
   maritalStatus: {
     type: DataTypes.ENUM('single', 'married', 'divorced', 'widowed'),
-    allowNull: true
+    allowNull: true,
+    validate: {
+      isIn: {
+        args: [['single', 'married', 'divorced', 'widowed']],
+        msg: 'Marital status must be single, married, divorced, or widowed'
+      }
+    }
   },
   areasOfInterest: {
     type: DataTypes.JSON,
     allowNull: true,
-    comment: 'Array of interests like temple_service, social_service, educational_support, events, medical_camps, others'
+    validate: {
+      isValidAreasOfInterest(value) {
+        if (value && !Array.isArray(value)) {
+          throw new Error('Areas of interest must be an array');
+        }
+        if (value) {
+          const validInterests = ['temple_service', 'social_service', 'educational_support', 'events', 'medical_camps', 'others'];
+          for (const interest of value) {
+            if (!validInterests.includes(interest)) {
+              throw new Error(`Invalid area of interest: ${interest}`);
+            }
+          }
+        }
+      }
+    }
   },
   availability: {
     type: DataTypes.ENUM('weekdays', 'weekends', 'flexible', 'specific_time'),
-    allowNull: true
-  },
-  specificTime: {
-    type: DataTypes.STRING(200),
-    allowNull: true
+    allowNull: true,
+    validate: {
+      isIn: {
+        args: [['weekdays', 'weekends', 'flexible', 'specific_time']],
+        msg: 'Availability must be weekdays, weekends, flexible, or specific_time'
+      }
+    }
   },
   feedback_suggestions: {
     type: DataTypes.TEXT,
@@ -81,27 +125,66 @@ const Volunteer = sequelize.define('Volunteer', {
   },
   status: {
     type: DataTypes.ENUM('pending', 'approved', 'rejected'),
-    defaultValue: 'pending'
+    defaultValue: 'pending',
+    validate: {
+      isIn: {
+        args: [['pending', 'approved', 'rejected']],
+        msg: 'Status must be pending, approved, or rejected'
+      }
+    }
   }
 }, {
   tableName: 'volunteers',
-  timestamps: true
-});
-
-// 👇 Auto-generate volunteerId before creating a record
-Volunteer.beforeCreate(async (volunteer, options) => {
-  const lastVolunteer = await Volunteer.findOne({
-    order: [['createdAt', 'DESC']]
-  });
-
-  let nextNumber = 1;
-  if (lastVolunteer && lastVolunteer.volunteerId) {
-    const lastNumber = parseInt(lastVolunteer.volunteerId.replace('VOL-', ''), 10);
-    nextNumber = lastNumber + 1;
+  timestamps: true,
+  hooks: {
+    beforeValidate: async (volunteer, options) => {
+      // Generate volunteerId only if it doesn't exist or is being created
+      if (!volunteer.volunteerId || volunteer.isNewRecord) {
+        await generateVolunteerId(volunteer);
+      }
+    },
+    beforeCreate: async (volunteer, options) => {
+      // Ensure volunteerId is set before creation
+      if (!volunteer.volunteerId) {
+        await generateVolunteerId(volunteer);
+      }
+    }
   }
-
-  const padded = String(nextNumber).padStart(4, '0'); // VOL-0001, VOL-0002, etc.
-  volunteer.volunteerId = `VOL-${padded}`;
 });
+
+// Helper function to generate volunteer ID
+async function generateVolunteerId(volunteer) {
+  try {
+    console.log('Generating volunteer ID...');
+    
+    const lastVolunteer = await Volunteer.findOne({
+      order: [['id', 'DESC']],
+      paranoid: false
+    });
+
+    let nextNumber = 1;
+    if (lastVolunteer && lastVolunteer.volunteerId) {
+      const idMatch = lastVolunteer.volunteerId.match(/\d+/);
+      if (idMatch) {
+        const lastNumber = parseInt(idMatch[0], 10);
+        nextNumber = lastNumber + 1;
+      } else {
+        // If existing ID doesn't match pattern, count all records
+        const count = await Volunteer.count({ paranoid: false });
+        nextNumber = count + 1;
+      }
+    }
+
+    const padded = String(nextNumber).padStart(4, '0');
+    volunteer.volunteerId = `VOL-${padded}`;
+    
+    console.log('Generated volunteerId:', volunteer.volunteerId);
+  } catch (error) {
+    console.error('Error generating volunteerId:', error);
+    // Fallback ID generation using timestamp
+    const timestamp = Date.now().toString().slice(-6);
+    volunteer.volunteerId = `VOL-${timestamp}`;
+  }
+}
 
 module.exports = Volunteer;

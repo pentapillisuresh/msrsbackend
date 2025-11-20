@@ -29,13 +29,15 @@ router.get('/', async (req, res) => {
   try {
     const { status = 'published', category } = req.query;
     
-    const whereClause = { status, isActive: true };
-    if (category) {
-      whereClause.category = category;
-    }
+    // const whereClause = { status, isActive: true };
+    // if (category) {
+    //   whereClause.category = category;
+    // }
+
+    
 
     const invitations = await Invitation.findAll({
-      where: whereClause,
+      // where: whereClause,
       order: [['eventDate', 'ASC']]
     });
 

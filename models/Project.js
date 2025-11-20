@@ -58,10 +58,10 @@ const Project = sequelize.define('Project', {
     type: DataTypes.JSON,
     allowNull: true
   },
-  documents: {
-    type: DataTypes.JSON,
-    allowNull: true
-  },
+  // documents: {
+  //   type: DataTypes.JSON,
+  //   allowNull: true
+  // },
   contactPerson: {
     type: DataTypes.STRING(100),
     allowNull: true

@@ -60,10 +60,6 @@ const AstrologyConsultation = sequelize.define('AstrologyConsultation', {
   serviceRequired: {
     type: DataTypes.JSON,
     allowNull: false
-    /*
-      Example:
-      ["Horoscope Matching", "Inti Vasthu", "Poojas"]
-    */
   },
 
   preferredAppointmentDate: {
@@ -79,6 +75,17 @@ const AstrologyConsultation = sequelize.define('AstrologyConsultation', {
   detailedRequirements: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+
+  // NEW FIELD: Number of Attendees
+  numberOfAttendees: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    validate: {
+      min: 1,
+      max: 20 // You can adjust the maximum as needed
+    }
   },
 
   status: {
