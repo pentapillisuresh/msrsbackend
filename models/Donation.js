@@ -55,7 +55,39 @@ const Donation = sequelize.define('Donation', {
   donorAddress: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+
+  // Payment fields
+  paymentId: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+
+  orderId: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+
+  status: {
+    type: DataTypes.ENUM('pending', 'completed', 'failed'),
+    defaultValue: 'pending'
+  },
+
+  paymentMethod: {
+    type: DataTypes.ENUM('online', 'upi', 'bank_transfer', 'cash'),
+    allowNull: true
+  },
+
+  transactionDate: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+
+  upiTransactionId: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
+
 }, {
   tableName: 'donations',
   timestamps: true
