@@ -23,6 +23,9 @@ const uploadRoutes = require('./routes/upload');
 const eventCategory = require('./routes/eventCategory');
 const AstrologyConsultation = require('./routes/astrologyConsultationRoutes');
 const Donation = require('./routes/Donation');
+const projectCategory = require('./routes/projectCategory');
+const elibraryCategory = require('./routes/elibraryCategory');
+const gallaryCategory = require('./routes/gallaryCategory');
 
 const app = express();
 
@@ -86,6 +89,9 @@ app.use('/api/team', teamRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api/elibrary', eLibraryRoutes);
 app.use('/api/eventCategory', eventCategory);
+app.use('/api/projectCategory', projectCategory);
+app.use('/api/gallaryCategory', gallaryCategory);
+app.use('/api/elibraryCategory', elibraryCategory);
 app.use('/api/Astrology', AstrologyConsultation);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/Donation', Donation);
