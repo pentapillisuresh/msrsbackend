@@ -12,6 +12,9 @@ const Governance = require('./Governance');
 const ELibrary = require('./ELibrary');
 const AstrologyConsultation = require('./AstrologyConsultation');
 const Certificate = require('./certificates');
+const GallaryCategory = require('./GallaryCategory');
+const ElibraryCategory = require('./ElibraryCategory');
+const ProjectCategory = require('./ProjectCategory');
 
 // Define associations here if needed
 // Example: User.hasMany(Project, { foreignKey: 'createdBy' });
@@ -23,6 +26,9 @@ module.exports = {
   Temple,
   Volunteer,
   Invitation,
+  GallaryCategory,
+  ElibraryCategory,
+  ProjectCategory,
   Media,
   Project,
   Team,

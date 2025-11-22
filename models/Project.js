@@ -16,19 +16,12 @@ const Project = sequelize.define('Project', {
     allowNull: false
   },
   category: {
-    type: DataTypes.ENUM(
-      'blood_bank',
-      'educational_resources',
-      'food_distribution',
-      'vedic_sanskrit_education',
-      'goshala',
-      'help_people',
-      'medical_assistance',
-      'yoga_classes',
-      'book_bank',
-      'others'
-    ),
-    allowNull: false
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  categoryId: {
+    type: DataTypes.STRING(50),
+    allowNull: true
   },
   objective: {
     type: DataTypes.TEXT,

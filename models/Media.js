@@ -39,6 +39,10 @@ const Media = sequelize.define('Media', {
     type: DataTypes.STRING(50),
     allowNull: true
   },
+  categoryId: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
   tags: {
     type: DataTypes.JSON,
     allowNull: true

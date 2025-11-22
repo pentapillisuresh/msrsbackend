@@ -65,7 +65,7 @@ const initializeDatabase = async () => {
     console.log('Database connection has been established successfully.');
     
     // Sync all models
-    await db.sync({ alter: false });
+    await db.sync({ alter: true });
     console.log('All models were synchronized successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);

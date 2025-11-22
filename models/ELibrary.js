@@ -20,16 +20,12 @@ const ELibrary = sequelize.define('ELibrary', {
     allowNull: true
   },
   category: {
-    type: DataTypes.ENUM(
-      'puranas',
-      'vedic_texts',
-      'spiritual_books',
-      'social_welfare',
-      'economics',
-      'philosophy',
-      'others'
-    ),
-    allowNull: false
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  categoryId: {
+    type: DataTypes.STRING(50),
+    allowNull: true
   },
   language: {
     type: DataTypes.STRING(50),
