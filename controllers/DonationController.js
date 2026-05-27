@@ -1,214 +1,165 @@
-const Donation = require('../models/Donation');
-const Razorpay = require('razorpay');
-const QRCode = require('qrcode');
+const { Donation, Transaction, Category } = require('../models');
+const razorpay = require('../config/razorpay');
+const { successResponse, errorResponse } = require('../utils/responseHelper');
+const crypto = require('crypto');
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
-
-// CREATE Donation
-exports.createDonation = async (req, res) => {
+// Create donation and Razorpay order
+const createDonation = async (req, res) => {
   try {
-    const donation = await Donation.create({
-      ...req.body,
-      status: 'pending'
-    });
-    res.status(201).json({ success: true, data: donation });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Error creating donation" });
-  }
-};
-
-// GET All Donations
-exports.getAllDonations = async (req, res) => {
-  try {
-    const donations = await Donation.findAll({ order: [['id', 'DESC']] });
-    res.json({ success: true, data: donations });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching donations" });
-  }
-};
-
-// GET Donation by ID
-exports.getDonationById = async (req, res) => {
-  try {
-    const donation = await Donation.findByPk(req.params.id);
-    if (!donation) return res.status(404).json({ success: false, message: "Donation not found" });
-
-    res.json({ success: true, data: donation });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching donation" });
-  }
-};
-
-// UPDATE Donation
-exports.updateDonation = async (req, res) => {
-  try {
-    const donation = await Donation.findByPk(req.params.id);
-    if (!donation) return res.status(404).json({ success: false, message: "Donation not found" });
-
-    await donation.update(req.body);
-    res.json({ success: true, data: donation });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error updating donation" });
-  }
-};
-
-// DELETE Donation
-exports.deleteDonation = async (req, res) => {
-  try {
-    const donation = await Donation.findByPk(req.params.id);
-    if (!donation) return res.status(404).json({ success: false, message: "Donation not found" });
-
-    await donation.destroy();
-    res.json({ success: true, message: "Donation deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error deleting donation" });
-  }
-};
-
-// Create Razorpay Order
-exports.createRazorpayOrder = async (req, res) => {
-  try {
-    const { amount, currency = 'INR', donationId } = req.body;
+    const donationData = req.body;
     
+    // Create Razorpay order
     const options = {
-      amount: Math.round(amount * 100), // amount in paise
-      currency,
-      receipt: `receipt_${donationId}_${Date.now()}`,
-      notes: {
-        donationId: donationId.toString()
-      }
+      amount: donationData.donationAmount * 100, // Amount in paise
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+      payment_capture: 1
     };
-
+    
     const order = await razorpay.orders.create(options);
     
-    res.json({
-      success: true,
+    // Create donation record
+    const donation = await Donation.create({
+      ...donationData,
+      status: 'pending'
+    });
+    
+    // Create transaction record
+    const transaction = await Transaction.create({
+      donationId: donation.id,
+      razorpayOrderId: order.id,
+      amount: donationData.donationAmount,
+      currency: 'INR',
+      status: 'created',
+      receipt: order.receipt
+    });
+    
+    return successResponse(res, {
+      donation,
       orderId: order.id,
       amount: order.amount,
-      currency: order.currency,
-      key: process.env.RAZORPAY_KEY_ID
-    });
+      currency: order.currency
+    }, 'Donation created successfully', 201);
   } catch (error) {
-    console.error('Razorpay order error:', error);
-    res.status(500).json({ success: false, message: "Error creating payment order" });
+    return errorResponse(res, error.message, 500);
   }
 };
 
-// Verify Razorpay Payment
-exports.verifyPayment = async (req, res) => {
+// Verify payment
+const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, donationId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     
-    const crypto = require('crypto');
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .update(body.toString())
       .digest('hex');
-
+    
+    const transaction = await Transaction.findOne({
+      where: { razorpayOrderId: razorpay_order_id },
+      include: [{ model: Donation }]
+    });
+    
+    if (!transaction) {
+      return errorResponse(res, 'Transaction not found', 404);
+    }
+    
     if (expectedSignature === razorpay_signature) {
-      // Payment verified successfully
-      const donation = await Donation.findByPk(donationId);
-      if (donation) {
-        await donation.update({
-          paymentId: razorpay_payment_id,
-          orderId: razorpay_order_id,
-          status: 'completed',
-          paymentMethod: 'online',
-          transactionDate: new Date()
-        });
-      }
-      
-      res.json({ 
-        success: true, 
-        message: 'Payment verified successfully',
-        donation 
+      await transaction.update({
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
+        status: 'paid'
       });
+      
+      await transaction.Donation.update({ status: 'completed' });
+      
+      return successResponse(res, {
+        transactionId: transaction.id,
+        paymentId: razorpay_payment_id
+      }, 'Payment verified successfully');
     } else {
-      res.status(400).json({ success: false, message: 'Payment verification failed' });
+      await transaction.update({ status: 'failed' });
+      await transaction.Donation.update({ status: 'failed' });
+      return errorResponse(res, 'Invalid payment signature', 400);
     }
   } catch (error) {
-    console.error('Payment verification error:', error);
-    res.status(500).json({ success: false, message: "Error verifying payment" });
+    return errorResponse(res, error.message, 500);
   }
 };
 
-// Generate QR Code for UPI Payment
-exports.generateQRCode = async (req, res) => {
+// Get all donations
+const getAllDonations = async (req, res) => {
   try {
-    const { amount, donationId, upiId = process.env.UPI_ID } = req.body;
+    const { status, page = 1, limit = 10 } = req.query;
+    const where = {};
+    if (status) where.status = status;
     
-    const upiString = `upi://pay?pa=${upiId}&pn=Temple%20Foundation&am=${amount}&cu=INR&tn=Donation%20${donationId}`;
-    
-    const qrCode = await QRCode.toDataURL(upiString);
-    
-    // Update donation with UPI details
-    await Donation.update({
-      paymentMethod: 'upi',
-      status: 'pending'
-    }, { where: { id: donationId } });
-    
-    res.json({
-      success: true,
-      qrCode,
-      upiString,
-      upiId
+    const offset = (page - 1) * limit;
+    const donations = await Donation.findAndCountAll({
+      where,
+      include: [{ model: Transaction }, { model: Category }],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['createdAt', 'DESC']]
     });
+    
+    return successResponse(res, {
+      total: donations.count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: donations.rows
+    }, 'Donations fetched successfully');
   } catch (error) {
-    console.error('QR code generation error:', error);
-    res.status(500).json({ success: false, message: "Error generating QR code" });
+    return errorResponse(res, error.message, 500);
   }
 };
 
-// Mark UPI Payment as Completed
-exports.markUPIPaymentCompleted = async (req, res) => {
+// Get donation by ID
+const getDonationById = async (req, res) => {
   try {
-    const { donationId, upiTransactionId } = req.body;
+    const { id } = req.params;
+    const donation = await Donation.findByPk(id, {
+      include: [{ model: Transaction }, { model: Category }]
+    });
     
-    const donation = await Donation.findByPk(donationId);
     if (!donation) {
-      return res.status(404).json({ success: false, message: "Donation not found" });
+      return errorResponse(res, 'Donation not found', 404);
     }
-
-    await donation.update({
-      status: 'completed',
-      upiTransactionId: upiTransactionId,
-      transactionDate: new Date()
-    });
-
-    res.json({ 
-      success: true, 
-      message: 'UPI payment marked as completed',
-      donation 
-    });
+    return successResponse(res, donation, 'Donation fetched successfully');
   } catch (error) {
-    console.error('UPI payment update error:', error);
-    res.status(500).json({ success: false, message: "Error updating UPI payment" });
+    return errorResponse(res, error.message, 500);
   }
 };
 
-// Get Payment Summary
-exports.getPaymentSummary = async (req, res) => {
+// Get donation statistics
+const getDonationStats = async (req, res) => {
   try {
-    const totalDonations = await Donation.count();
-    const completedDonations = await Donation.count({ where: { status: 'completed' } });
-    const pendingDonations = await Donation.count({ where: { status: 'pending' } });
-    const totalAmount = await Donation.sum('amount', { where: { status: 'completed' } });
-
-    res.json({
-      success: true,
-      data: {
-        totalDonations,
-        completedDonations,
-        pendingDonations,
-        totalAmount: totalAmount || 0
-      }
+    const totalDonations = await Donation.sum('donationAmount', { where: { status: 'completed' } });
+    const monthlyDonations = await Donation.findAll({
+      where: { status: 'completed' },
+      attributes: [
+        [sequelize.fn('DATE_FORMAT', sequelize.col('createdAt'), '%Y-%m'), 'month'],
+        [sequelize.fn('SUM', sequelize.col('donationAmount')), 'total']
+      ],
+      group: [sequelize.fn('DATE_FORMAT', sequelize.col('createdAt'), '%Y-%m')],
+      order: [[sequelize.fn('DATE_FORMAT', sequelize.col('createdAt'), '%Y-%m'), 'DESC']],
+      limit: 12
     });
+    
+    return successResponse(res, {
+      totalAmount: totalDonations || 0,
+      monthlyStats: monthlyDonations
+    }, 'Donation stats fetched successfully');
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching payment summary" });
+    return errorResponse(res, error.message, 500);
   }
+};
+
+module.exports = {
+  createDonation,
+  verifyPayment,
+  getAllDonations,
+  getDonationById,
+  getDonationStats
 };

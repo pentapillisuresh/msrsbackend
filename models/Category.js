@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const ELibrary = sequelize.define('ELibrary', {
+  const Category = sequelize.define('Category', {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -11,27 +11,19 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    description: {
-      type: DataTypes.TEXT,
+    categoryRelated: {
+      type: DataTypes.ENUM('project', 'event', 'knowledge', 'board', 'media'),
       allowNull: false
     },
-    file: {
-      type: DataTypes.STRING,
+    description: {
+      type: DataTypes.TEXT,
       allowNull: true
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive'),
       defaultValue: 'active'
-    },
-    categoryId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'Categories',
-        key: 'id'
-      }
     }
   });
 
-  return ELibrary;
+  return Category;
 };

@@ -4,33 +4,40 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const errorHandler = require('./middleware/errorHandler');
 require('dotenv').config();
+const { createAdminIfNotExists, createCustomAdminFromEnv } = require('./utils/adminSetup');
 
 // Import database connection
 const db = require('./config/database');
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const templeRoutes = require('./routes/temple');
-const volunteerRoutes = require('./routes/volunteer');
-const invitationRoutes = require('./routes/invitation');
-const mediaRoutes = require('./routes/media');
-const projectRoutes = require('./routes/project');
-const teamRoutes = require('./routes/team');
-const governanceRoutes = require('./routes/governance');
-const eLibraryRoutes = require('./routes/elibrary');
-const uploadRoutes = require('./routes/upload');
-const eventCategory = require('./routes/eventCategory');
-const AstrologyConsultation = require('./routes/astrologyConsultationRoutes');
-const Donation = require('./routes/Donation');
-const projectCategory = require('./routes/projectCategory');
-const elibraryCategory = require('./routes/elibraryCategory');
-const gallaryCategory = require('./routes/gallaryCategory');
+const adminRoutes = require('./routes/adminRoutes');
+const authRoutes = require('./routes/authRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const volunteerRoutes = require('./routes/volunteerRoutes');
+const projectRoutes = require('./routes/projectRoutes');
+const meetingRoutes = require('./routes/meetingRoutes');
+const documentRoutes = require('./routes/documentRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const donationRoutes = require('./routes/donationRoutes');
+const eLibraryRoutes = require('./routes/eLibraryRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
+const boardRoutes = require('./routes/boardRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
+const { Error } = require('sequelize');
 
 const app = express();
 
 // Security middleware
-app.use(helmet());
+// Security middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(compression());
 
 // Rate limiting
@@ -39,13 +46,14 @@ const limiter = rateLimit({
   max: 1000, // limit each IP to 1000 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
-app.use(limiter);
+
+app.use('/api/', limiter);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] 
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173','http://localhost:5174',],
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://yourdomain.com']
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:5174',],
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -66,7 +74,7 @@ const initializeDatabase = async () => {
   try {
     await db.authenticate();
     console.log('Database connection has been established successfully.');
-    
+
     // Sync all models
     await db.sync({ alter: true });
     console.log('All models were synchronized successfully.');
@@ -79,22 +87,22 @@ const initializeDatabase = async () => {
 initializeDatabase();
 
 // Routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/temple', templeRoutes);
-app.use('/api/volunteer', volunteerRoutes);
-app.use('/api/invitation', invitationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/volunteers', volunteerRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/meetings', meetingRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/donations', donationRoutes);
+app.use('/api/e-library', eLibraryRoutes);
 app.use('/api/media', mediaRoutes);
-app.use('/api/project', projectRoutes);
-app.use('/api/team', teamRoutes);
-app.use('/api/governance', governanceRoutes);
-app.use('/api/elibrary', eLibraryRoutes);
-app.use('/api/eventCategory', eventCategory);
-app.use('/api/projectCategory', projectCategory);
-app.use('/api/gallaryCategory', gallaryCategory);
-app.use('/api/elibraryCategory', elibraryCategory);
-app.use('/api/Astrology', AstrologyConsultation);
+app.use('/api/board', boardRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/Donation', Donation);
+app.use('/api/reports', reportRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -106,13 +114,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Error:', error);
-  res.status(error.status || 500).json({
-    status: 'error',
-    message: error.message || 'Internal Server Error'
-  });
-});
+app.use(errorHandler);
+
 
 // 404 handler
 app.use(/.*/, (req, res) => {
@@ -122,6 +125,21 @@ app.use(/.*/, (req, res) => {
   });
 });
 
+// Function to initialize application
+const initializeApp = async () => {
+  try {
+    // Create admin user based on environment
+    if (process.env.USE_CUSTOM_ADMIN === 'true') {
+      await createCustomAdminFromEnv();
+    } else {
+      await createAdminIfNotExists();
+    }
+  } catch (err) {
+    console.error("server Error:::", err)
+  }
+}
+
+initializeApp();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

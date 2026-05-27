@@ -1,13 +1,13 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const ELibrary = sequelize.define('ELibrary', {
+  const Event = sequelize.define('Event', {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
-    name: {
+    eventName: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -15,13 +15,25 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    file: {
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false
+    },
+    time: {
+      type: DataTypes.TIME,
+      allowNull: false
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    image: {
       type: DataTypes.STRING,
       allowNull: true
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'active'
+      type: DataTypes.ENUM('upcoming', 'ongoing', 'completed', 'cancelled'),
+      defaultValue: 'upcoming'
     },
     categoryId: {
       type: DataTypes.UUID,
@@ -33,5 +45,5 @@ module.exports = (sequelize) => {
     }
   });
 
-  return ELibrary;
+  return Event;
 };

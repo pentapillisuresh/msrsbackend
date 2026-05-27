@@ -1,96 +1,64 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
 
-const Donation = sequelize.define('Donation', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-
-  category: {
-    type: DataTypes.ENUM(
-      'blood_bank',
-      'educational_resources',
-      'food_distribution',
-      'vedic_sanskrit_education',
-      'goshala',
-      'help_people',
-      'medical_assistance',
-      'yoga_classes',
-      'book_bank',
-      'others'
-    ),
-    allowNull: false
-  },
-
-  donorName: {
-    type: DataTypes.STRING(150),
-    allowNull: false
-  },
-
-  donorEmail: {
-    type: DataTypes.STRING(200),
-    allowNull: true,
-    validate: {
-      isEmail: true
+module.exports = (sequelize) => {
+  const Donation = sequelize.define('Donation', {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
+    },
+    citizenship: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    donationType: {
+      type: DataTypes.ENUM('once', 'monthly'),
+      allowNull: false
+    },
+    cause: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    donationAmount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false
+    },
+    donerName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    donerEmail: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEmail: true
+      }
+    },
+    donerPhoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    panCard: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'completed', 'failed', 'refunded'),
+      defaultValue: 'pending'
+    },
+    categoryId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'Categories',
+        key: 'id'
+      }
     }
-  },
+  });
 
-  donorPhoneNumber: {
-    type: DataTypes.STRING(20),
-    allowNull: true
-  },
-
-  panNumber: {
-    type: DataTypes.STRING(20),
-    allowNull: true
-  },
-
-  amount: {
-    type: DataTypes.FLOAT,
-    allowNull: true
-  },
-
-  donorAddress: {
-    type: DataTypes.TEXT,
-    allowNull: true
-  },
-
-  // Payment fields
-  paymentId: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-
-  orderId: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-
-  status: {
-    type: DataTypes.ENUM('pending', 'completed', 'failed'),
-    defaultValue: 'pending'
-  },
-
-  paymentMethod: {
-    type: DataTypes.ENUM('online', 'upi', 'bank_transfer', 'cash'),
-    allowNull: true
-  },
-
-  transactionDate: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
-
-  upiTransactionId: {
-    type: DataTypes.STRING,
-    allowNull: true
-  }
-
-}, {
-  tableName: 'donations',
-  timestamps: true
-});
-
-module.exports = Donation;
+  return Donation;
+};

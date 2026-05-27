@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const ELibrary = sequelize.define('ELibrary', {
+  const BoardMember = sequelize.define('BoardMember', {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -11,11 +11,22 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    description: {
-      type: DataTypes.TEXT,
+    role: {
+      type: DataTypes.STRING,
       allowNull: false
     },
-    file: {
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEmail: true
+      }
+    },
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    mediaType: {
       type: DataTypes.STRING,
       allowNull: true
     },
@@ -33,5 +44,5 @@ module.exports = (sequelize) => {
     }
   });
 
-  return ELibrary;
+  return BoardMember;
 };

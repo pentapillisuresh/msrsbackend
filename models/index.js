@@ -1,39 +1,59 @@
+const { Sequelize } = require('sequelize');
 const sequelize = require('../config/database');
 
-// Import all models
-const User = require('./User');
-const Temple = require('./Temple');
-const Volunteer = require('./Volunteer');
-const Invitation = require('./Invitation');
-const Media = require('./Media');
-const Project = require('./Project');
-const Team = require('./Team');
-const Governance = require('./Governance');
-const ELibrary = require('./ELibrary');
-const AstrologyConsultation = require('./AstrologyConsultation');
-const Certificate = require('./certificates');
-const GallaryCategory = require('./GallaryCategory');
-const ElibraryCategory = require('./ElibraryCategory');
-const ProjectCategory = require('./ProjectCategory');
+const User = require('./User')(sequelize);
+const Category = require('./Category')(sequelize);
+const Volunteer = require('./Volunteer')(sequelize);
+const Project = require('./Project')(sequelize);
+const Meeting = require('./Meeting')(sequelize);
+const Document = require('./Document')(sequelize);
+const Event = require('./Event')(sequelize);
+const Donation = require('./Donation')(sequelize);
+const ELibrary = require('./ELibrary')(sequelize);
+const Media = require('./Media')(sequelize);
+const BoardMember = require('./BoardMember')(sequelize);
+const Transaction = require('./Transaction')(sequelize);
+const VolunteerPreference = require('./VolunteerPreference')(sequelize);
+const Message = require('./Message')(sequelize); // Add this line
 
-// Define associations here if needed
-// Example: User.hasMany(Project, { foreignKey: 'createdBy' });
-// Project.belongsTo(User, { foreignKey: 'createdBy' });
+// Associations
+Category.hasMany(Volunteer, { foreignKey: 'categoryId' });
+Volunteer.belongsTo(Category, { foreignKey: 'categoryId' });
+
+Category.hasMany(Project, { foreignKey: 'categoryId' });
+Project.belongsTo(Category, { foreignKey: 'categoryId' });
+
+Category.hasMany(Event, { foreignKey: 'categoryId' });
+Event.belongsTo(Category, { foreignKey: 'categoryId' });
+
+Category.hasMany(ELibrary, { foreignKey: 'categoryId' });
+ELibrary.belongsTo(Category, { foreignKey: 'categoryId' });
+
+Category.hasMany(Media, { foreignKey: 'categoryId' });
+Media.belongsTo(Category, { foreignKey: 'categoryId' });
+
+Category.hasMany(BoardMember, { foreignKey: 'categoryId' });
+BoardMember.belongsTo(Category, { foreignKey: 'categoryId' });
+
+Donation.hasMany(Transaction, { foreignKey: 'donationId' });
+Transaction.belongsTo(Donation, { foreignKey: 'donationId' });
+
+Volunteer.hasMany(VolunteerPreference, { foreignKey: 'volunteerId' });
+VolunteerPreference.belongsTo(Volunteer, { foreignKey: 'volunteerId' });
 
 module.exports = {
   sequelize,
   User,
-  Temple,
+  Category,
   Volunteer,
-  Invitation,
-  GallaryCategory,
-  ElibraryCategory,
-  ProjectCategory,
-  Media,
   Project,
-  Team,
-  Governance,
+  Meeting,
+  Document,
+  Event,
+  Donation,
   ELibrary,
-  AstrologyConsultation,
-  Certificate,
+  Media,Message,
+  BoardMember,
+  Transaction,
+  VolunteerPreference
 };

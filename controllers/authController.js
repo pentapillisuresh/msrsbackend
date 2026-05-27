@@ -1,254 +1,114 @@
-const jwt = require('jsonwebtoken');
 const { User } = require('../models');
-const { validationResult } = require('express-validator');
-
-// Generate JWT tokens
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign(
-    { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: '3y' } // 3 years as requested
-  );
-  
-  const refreshToken = jwt.sign(
-    { userId },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '5y' } // 5 years as requested
-  );
-  
-  return { accessToken, refreshToken };
-};
+const { generateTokens } = require('../utils/jwtHelper');
+const { successResponse, errorResponse } = require('../utils/responseHelper');
 
 const register = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const { username, email, password, role = 'user' } = req.body;
-
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      where: {
-        $or: [
-          { email },
-          { username }
-        ]
-      }
-    });
-
+    const { name, email, password, phoneNumber, role } = req.body;
+    
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'User with this email or username already exists'
-      });
+      return errorResponse(res, 'User already exists', 400);
     }
-
-    // Create new user
+    
     const user = await User.create({
-      username,
+      name,
       email,
       password,
-      role
+      phoneNumber,
+      role: role || 'user'
     });
-
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user.id);
-
-    // Save refresh token to database
+    
+    const { accessToken, refreshToken } = generateTokens(user);
     await user.update({ refreshToken });
-
-    // Remove password from response
-    const userResponse = user.toJSON();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-
-    res.status(201).json({
-      status: 'success',
-      message: 'User registered successfully',
-      data: {
-        user: userResponse,
-        tokens: {
-          accessToken,
-          refreshToken
-        }
-      }
-    });
+    
+    const userData = user.toJSON();
+    delete userData.password;
+    delete userData.refreshToken;
+    
+    return successResponse(res, { user: userData, accessToken, refreshToken }, 'Registration successful', 201);
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    return errorResponse(res, error.message, 500);
   }
 };
 
 const login = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Validation failed',
-        errors: errors.array()
-      });
+    const { email, password } = req.body;
+    
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return errorResponse(res, 'Invalid credentials', 401);
     }
-
-    const { username, password } = req.body;
-
-    // Find user by username or email
-    const user = await User.findOne({
-      where: {
-        $or: [
-          { username },
-          { email: username }
-        ]
-      }
-    });
-
-    if (!user || !user.isActive) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid credentials or account inactive'
-      });
-    }
-
-    // Validate password
+    
     const isValidPassword = await user.validatePassword(password);
     if (!isValidPassword) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid credentials'
-      });
+      return errorResponse(res, 'Invalid credentials', 401);
     }
-
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user.id);
-
-    // Save refresh token to database
+    
+    if (user.status !== 'active') {
+      return errorResponse(res, 'Account is inactive', 401);
+    }
+    
+    const { accessToken, refreshToken } = generateTokens(user);
     await user.update({ refreshToken });
-
-    // Remove password from response
-    const userResponse = user.toJSON();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-
-    res.json({
-      status: 'success',
-      message: 'Login successful',
-      data: {
-        user: userResponse,
-        tokens: {
-          accessToken,
-          refreshToken
-        }
-      }
-    });
+    
+    const userData = user.toJSON();
+    delete userData.password;
+    delete userData.refreshToken;
+    
+    return successResponse(res, { user: userData, accessToken, refreshToken }, 'Login successful');
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    return errorResponse(res, error.message, 500);
   }
 };
 
 const refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Refresh token is required'
-      });
-    }
-
-    // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const user = req.user;
     
-    // Find user and check if refresh token matches
-    const user = await User.findOne({
-      where: {
-        id: decoded.userId,
-        refreshToken,
-        isActive: true
-      }
-    });
-
-    if (!user) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid refresh token'
-      });
-    }
-
-    // Generate new tokens
-    const tokens = generateTokens(user.id);
-
-    // Update refresh token in database
-    await user.update({ refreshToken: tokens.refreshToken });
-
-    res.json({
-      status: 'success',
-      message: 'Tokens refreshed successfully',
-      data: {
-        tokens
-      }
-    });
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+    await user.update({ refreshToken: newRefreshToken });
+    
+    return successResponse(res, { accessToken, refreshToken: newRefreshToken }, 'Token refreshed');
   } catch (error) {
-    console.error('Refresh token error:', error);
-    res.status(401).json({
-      status: 'error',
-      message: 'Invalid or expired refresh token'
-    });
+    return errorResponse(res, error.message, 500);
   }
 };
 
 const logout = async (req, res) => {
   try {
-    const user = req.user;
-
-    // Clear refresh token from database
-    await User.update(
-      { refreshToken: null },
-      { where: { id: user.id } }
-    );
-
-    res.json({
-      status: 'success',
-      message: 'Logged out successfully'
-    });
+    await req.user.update({ refreshToken: null });
+    return successResponse(res, null, 'Logged out successfully');
   } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    return errorResponse(res, error.message, 500);
   }
 };
 
 const getProfile = async (req, res) => {
   try {
-    const user = req.user.toJSON();
-    delete user.password;
-    delete user.refreshToken;
-
-    res.json({
-      status: 'success',
-      data: { user }
-    });
+    const userData = req.user.toJSON();
+    delete userData.password;
+    delete userData.refreshToken;
+    return successResponse(res, userData, 'Profile fetched successfully');
   } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const { name, phoneNumber } = req.body;
+    await req.user.update({ name, phoneNumber });
+    
+    const userData = req.user.toJSON();
+    delete userData.password;
+    delete userData.refreshToken;
+    
+    return successResponse(res, userData, 'Profile updated successfully');
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
   }
 };
 
@@ -257,5 +117,6 @@ module.exports = {
   login,
   refreshToken,
   logout,
-  getProfile
+  getProfile,
+  updateProfile
 };
