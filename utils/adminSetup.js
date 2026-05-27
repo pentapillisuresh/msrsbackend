@@ -19,10 +19,6 @@ const createAdminIfNotExists = async () => {
         status: 'active'
       };
 
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(defaultAdmin.password, 10);
-      defaultAdmin.password = hashedPassword;
-
       // Create admin
       const admin = await User.create(defaultAdmin);
       
@@ -56,13 +52,11 @@ const createCustomAdminFromEnv = async () => {
       where: { email: adminEmail }
     });
 
-    if (!adminExists) {
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      
+    if (!adminExists) {      
       const admin = await User.create({
         name: adminName,
         email: adminEmail,
-        password: hashedPassword,
+        password: adminPassword,
         phoneNumber: adminPhone,
         role: 'admin',
         status: 'active'
@@ -94,8 +88,7 @@ const resetAdminPassword = async (email, newPassword) => {
       throw new Error('Admin not found');
     }
     
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await admin.update({ password: hashedPassword });
+    await admin.update({ password: newPassword });
     
     console.log('✅ Admin password reset successfully');
     return true;

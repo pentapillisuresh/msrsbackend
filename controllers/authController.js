@@ -38,12 +38,12 @@ const login = async (req, res) => {
     
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return errorResponse(res, 'Invalid credentials', 401);
+      return errorResponse(res, 'Invalid Email credentials', 401);
     }
-    
     const isValidPassword = await user.validatePassword(password);
+    console.log("isValidPassword:::",isValidPassword)
     if (!isValidPassword) {
-      return errorResponse(res, 'Invalid credentials', 401);
+      return errorResponse(res, 'Invalid Password credentials', 401);
     }
     
     if (user.status !== 'active') {
