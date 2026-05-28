@@ -15,7 +15,7 @@ const {
 router.use(verifyToken, isAdmin);
 
 // Main dashboard endpoint
-router.get('/dashboard', getDashboardData);
+router.get('/', getDashboardData);
 
 // Quick stats for widgets
 router.get('/quick-stats', getQuickStats);
