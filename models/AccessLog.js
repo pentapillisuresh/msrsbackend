@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Document = sequelize.define('Document', {
+  const AccessLog = sequelize.define('AccessLog', {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -11,31 +11,31 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    certificateType: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
     name: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    year: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    documentPath: {
+    email: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    status: {
-      type: DataTypes.ENUM('active', 'inactive', 'expired'),
-      defaultValue: 'active'
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    country: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    state: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    district: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   });
 
-  return Document;
+  return AccessLog;
 };
