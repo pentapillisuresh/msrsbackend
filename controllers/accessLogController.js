@@ -1,27 +1,26 @@
 const { AccessLog } = require('../models');
 const { successResponse, errorResponse } = require('../utils/responseHelper');
 
-// Create document
+// Create accessLog
 const createAccessLog = async (req, res) => {
   try {
-    const documentData = req.body;
-    const document = await AccessLog.create(documentData);
-    return successResponse(res, document, 'AccessLog created successfully', 201);
+    const accessLogData = req.body;
+    const accessLog = await AccessLog.create(accessLogData);
+    return successResponse(res, accessLog, 'AccessLog created successfully', 201);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
 };
 
-// Get all documents
+// Get all accessLogs
 const getAllAccessLogs = async (req, res) => {
   try {
-    const { documentType, status, page = 1, limit = 10 } = req.query;
+    const { accessLogType, page = 1, limit = 10 } = req.query;
     const where = {};
-    if (documentType) where.documentType = documentType;
-    if (status) where.status = status;
+    if (accessLogType) where.accessLogType = accessLogType;
     
     const offset = (page - 1) * limit;
-    const documents = await AccessLog.findAndCountAll({
+    const accessLog = await AccessLog.findAndCountAll({
       where,
       limit: parseInt(limit),
       offset: parseInt(offset),
@@ -29,58 +28,58 @@ const getAllAccessLogs = async (req, res) => {
     });
     
     return successResponse(res, {
-      total: documents.count,
+      total: accessLog.count,
       page: parseInt(page),
       limit: parseInt(limit),
-      data: documents.rows
+      data: accessLog.rows
     }, 'AccessLogs fetched successfully');
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
 };
 
-// Get document by ID
+// Get accessLog by ID
 const getAccessLogById = async (req, res) => {
   try {
     const { id } = req.params;
-    const document = await AccessLog.findByPk(id);
-    if (!document) {
+    const accessLog = await AccessLog.findByPk(id);
+    if (!accessLog) {
       return errorResponse(res, 'AccessLog not found', 404);
     }
-    return successResponse(res, document, 'AccessLog fetched successfully');
+    return successResponse(res, accessLog, 'AccessLog fetched successfully');
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
 };
 
-// Update document
+// Update accessLog
 const updateAccessLog = async (req, res) => {
   try {
     const { id } = req.params;
-    const documentData = req.body;
+    const accessLogData = req.body;
     
-    const document = await AccessLog.findByPk(id);
-    if (!document) {
+    const accessLog = await AccessLog.findByPk(id);
+    if (!accessLog) {
       return errorResponse(res, 'AccessLog not found', 404);
     }
     
-    await document.update(documentData);
-    return successResponse(res, document, 'AccessLog updated successfully');
+    await accessLog.update(accessLogData);
+    return successResponse(res, accessLog, 'AccessLog updated successfully');
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
 };
 
-// Delete document
+// Delete accessLog
 const deleteAccessLog = async (req, res) => {
   try {
     const { id } = req.params;
-    const document = await AccessLog.findByPk(id);
-    if (!document) {
+    const accessLog = await AccessLog.findByPk(id);
+    if (!accessLog) {
       return errorResponse(res, 'AccessLog not found', 404);
     }
     
-    await document.destroy();
+    await accessLog.destroy();
     return successResponse(res, null, 'AccessLog deleted successfully');
   } catch (error) {
     return errorResponse(res, error.message, 500);
