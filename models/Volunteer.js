@@ -58,13 +58,15 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true
     },
-    availableStartTime: {
-      type: DataTypes.TIME,
-      allowNull: true
+    availableStartDateTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Start date and time of availability'
     },
-    availableEndTime: {
-      type: DataTypes.TIME,
-      allowNull: true
+    availableEndDateTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'End date and time of availability'
     },
     motivation: {
       type: DataTypes.TEXT,
