@@ -5,8 +5,66 @@ const { successResponse, errorResponse } = require('../utils/responseHelper');
 const createAccessLog = async (req, res) => {
   try {
     const accessLogData = req.body;
+
     const accessLog = await AccessLog.create(accessLogData);
-    return successResponse(res, accessLog, 'AccessLog created successfully', 201);
+
+    return successResponse(
+      res,
+      {
+        accessLog,
+        OTP: accessLog.OTP
+      },
+      'AccessLog created successfully',
+      201
+    );
+
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+const verifyOTP = async (req, res) => {
+  try {
+    const { phoneNumber, OTP } = req.body;
+
+    // Validate request
+    if (!phoneNumber || !OTP) {
+      return errorResponse(
+        res,
+        'Phone number and OTP are required',
+        400
+      );
+    }
+
+    // Find matching access log
+    const accessLog = await AccessLog.findOne({
+      where: {
+        phoneNumber,
+        OTP,
+        status: 'active'
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Invalid OTP
+    if (!accessLog) {
+      return errorResponse(res, 'Invalid or expired OTP', 400);
+    }
+
+    // Update status after successful verification
+    accessLog.status = 'inactive';
+
+    await accessLog.save();
+
+    return successResponse(
+      res,
+      {
+        verified: true,
+      },
+      'OTP verified successfully',
+      200
+    );
+
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -88,6 +146,7 @@ const deleteAccessLog = async (req, res) => {
 
 module.exports = {
   createAccessLog,
+  verifyOTP,
   getAllAccessLogs,
   getAccessLogById,
   updateAccessLog,

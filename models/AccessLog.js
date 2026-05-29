@@ -34,6 +34,22 @@ module.exports = (sequelize) => {
     district: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    OTP: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'inactive', 'expired'),
+      defaultValue: 'active'
+    }
+
+  }, {
+    hooks: {
+      beforeCreate: (accessLog) => {
+        // Generate 6-digit OTP
+        accessLog.OTP = Math.floor(100000 + Math.random() * 900000).toString();
+      }
     }
   });
 
