@@ -11,7 +11,7 @@ const {
 } = require('../controllers/documentController');
 
 router.post('/', verifyToken, uploadSingle('document'), createDocument);
-router.get('/', verifyToken, getAllDocuments);
+router.get('/',  getAllDocuments);
 router.get('/:id', verifyToken, getDocumentById);
 router.put('/:id', verifyToken, uploadSingle('document'), updateDocument);
 router.delete('/:id', verifyToken, isAdmin, deleteDocument);
