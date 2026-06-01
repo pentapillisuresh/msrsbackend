@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     categoryRelated: {
-      type: DataTypes.ENUM('project', 'event', 'knowledge', 'board', 'media'),
+      type: DataTypes.ENUM('project', 'event', 'knowledge', 'board', 'media','Donation','volunteer'),
       allowNull: false
     },
     description: {

@@ -21,6 +21,9 @@ const AccessLog = require('./AccessLog')(sequelize); // Add this line
 Category.hasMany(Volunteer, { foreignKey: 'categoryId' });
 Volunteer.belongsTo(Category, { foreignKey: 'categoryId' });
 
+Category.hasMany(Donation, { foreignKey: 'categoryId' });
+Donation.belongsTo(Category, { foreignKey: 'categoryId' });
+
 Category.hasMany(Project, { foreignKey: 'categoryId' });
 Project.belongsTo(Category, { foreignKey: 'categoryId' });
 

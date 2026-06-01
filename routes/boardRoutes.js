@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const { verifyToken, isAdmin } =
-require('../middleware/auth');
+  require('../middleware/auth');
 
 const { uploadSingle } =
-require('../middleware/upload');
+  require('../middleware/upload');
 
 const {
   createBoardMember,

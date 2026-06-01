@@ -1,7 +1,8 @@
-const { Donation, Transaction, Category } = require('../models');
+const { Donation, Transaction, Category,sequelize } = require('../models');
 const razorpay = require('../config/razorpay');
 const { successResponse, errorResponse } = require('../utils/responseHelper');
 const crypto = require('crypto');
+const { UUID } = require('sequelize');
 
 // Create donation and Razorpay order
 const createDonation = async (req, res) => {
@@ -34,6 +35,39 @@ const createDonation = async (req, res) => {
       receipt: order.receipt
     });
     
+    return successResponse(res, {
+      donation,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency
+    }, 'Donation created successfully', 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+const createDonationFromAdmin = async (req, res) => {
+  try {
+    const donationData = req.body;
+        
+    // Create donation record
+    const donation = await Donation.create({
+      ...donationData,
+      status: 'pending'
+    });
+    
+    // Create transaction record
+    const transaction = await Transaction.create({
+      donationId: donation.id,
+      razorpayOrderId: Math.floor(
+        100000000 + Math.random() * 900000000
+      ).toString(),
+      amount: donationData.donationAmount,
+      currency: "INR",
+      status: "created",
+      receipt: order.receipt,
+    });
+        
     return successResponse(res, {
       donation,
       orderId: order.id,

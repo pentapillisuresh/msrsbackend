@@ -27,8 +27,8 @@ const boardRoutes = require('./routes/boardRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const messageRoutes = require('./routes/messageRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
 const accessLogRoutes = require('./routes/accessLogRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const { Error } = require('sequelize');
 

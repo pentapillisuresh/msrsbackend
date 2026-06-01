@@ -5,7 +5,7 @@ const {
   createAccessLog,
   getAllAccessLogs,
   getAccessLogById,
-  verifyOTP,
+  verifyOTP,getAccessLogsCount,
   updateAccessLog,
   deleteAccessLog
 } = require('../controllers/accessLogController');
@@ -13,6 +13,7 @@ const {
 router.post('/', createAccessLog);
 router.post('/verify-otp', verifyOTP);
 router.get('/', verifyToken, isAdmin, getAllAccessLogs);
+router.get('/count', verifyToken, isAdmin, getAccessLogsCount);
 router.get('/:id', verifyToken, isAdmin, getAccessLogById);
 router.put('/:id', verifyToken,  updateAccessLog);
 router.delete('/:id', verifyToken, isAdmin, deleteAccessLog);

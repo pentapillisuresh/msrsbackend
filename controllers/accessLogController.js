@@ -1,3 +1,4 @@
+const { where } = require('sequelize');
 const { AccessLog } = require('../models');
 const { successResponse, errorResponse } = require('../utils/responseHelper');
 
@@ -75,7 +76,7 @@ const getAllAccessLogs = async (req, res) => {
   try {
     const { accessLogType, page = 1, limit = 10 } = req.query;
     const where = {};
-    if (accessLogType) where.accessLogType = accessLogType;
+    if (accessLogType) where.documentType = accessLogType;
     
     const offset = (page - 1) * limit;
     const accessLog = await AccessLog.findAndCountAll({
@@ -95,7 +96,37 @@ const getAllAccessLogs = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
+const getAccessLogsCount = async (req, res) => {
+  try {
+    const [
+      allAccessLog,
+      activeAccessLog,
+      inactiveAccessLog,
+    ] = await Promise.all([
+      AccessLog.count(),
+      AccessLog.count({ where: { status: "active" } }),
+      AccessLog.count({ where: { status: "inactive" } }),
+    ]);
 
+    return successResponse(
+      res,
+      {
+        allAccessLog,
+        activeAccessLog,
+        inactiveAccessLog,
+      },
+      "Access log counts fetched successfully"
+    );
+  } catch (error) {
+    console.error("Error fetching access log counts:", error);
+
+    return errorResponse(
+      res,
+      error.message || "Failed to fetch access log counts",
+      500
+    );
+  }
+};
 // Get accessLog by ID
 const getAccessLogById = async (req, res) => {
   try {
@@ -147,6 +178,7 @@ const deleteAccessLog = async (req, res) => {
 module.exports = {
   createAccessLog,
   verifyOTP,
+  getAccessLogsCount,
   getAllAccessLogs,
   getAccessLogById,
   updateAccessLog,
