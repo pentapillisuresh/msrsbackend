@@ -15,7 +15,7 @@ const {
 
 // Middleware to check if user is super admin
 const isSuperAdmin = (req, res, next) => {
-  if (req.user.role !== 'super_admin') {
+  if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied. Super Admin only.' });
   }
   next();

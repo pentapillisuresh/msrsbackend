@@ -45,6 +45,9 @@ Transaction.belongsTo(Donation, { foreignKey: 'donationId' });
 Volunteer.hasMany(VolunteerPreference, { foreignKey: 'volunteerId' });
 VolunteerPreference.belongsTo(Volunteer, { foreignKey: 'volunteerId' });
 
+User.hasMany(Message, {foreignKey: 'repliedBy'});
+Message.belongsTo(User, {foreignKey: 'repliedBy',as: 'repliedUser'});
+
 module.exports = {
   sequelize,
   User,

@@ -113,7 +113,7 @@ const getAllMessages = async (req, res) => {
       where,
       include: [{
         model: User,
-        as: 'repliedByUser',
+        as: 'repliedUser',
         attributes: ['id', 'name', 'email']
       }],
       limit: parseInt(limit),

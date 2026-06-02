@@ -65,15 +65,40 @@ const createDonationFromAdmin = async (req, res) => {
       amount: donationData.donationAmount,
       currency: "INR",
       status: "created",
-      receipt: order.receipt,
+      receipt: Math.floor(
+        100000000 + Math.random() * 900000000
+      ).toString(),
     });
         
     return successResponse(res, {
       donation,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency
+      transaction: transaction.id,
+      currency: transaction.currency
     }, 'Donation created successfully', 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+const updateDonationStatusById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const donation = await Donation.findByPk(id);
+
+    if (!donation) {
+      return errorResponse(res, 'Donation not found', 404);
+    }
+
+    await donation.update({ status });
+
+    return successResponse(
+      res,
+      { donation },
+      'Donation updated successfully',
+      200
+    );
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -193,6 +218,8 @@ const getDonationStats = async (req, res) => {
 module.exports = {
   createDonation,
   verifyPayment,
+  createDonationFromAdmin,
+  updateDonationStatusById,
   getAllDonations,
   getDonationById,
   getDonationStats
