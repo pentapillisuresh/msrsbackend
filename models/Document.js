@@ -9,7 +9,7 @@ module.exports = (sequelize) => {
     },
     documentType: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false 
     },
     certificateType: {
       type: DataTypes.STRING,
