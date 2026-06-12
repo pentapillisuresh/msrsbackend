@@ -18,7 +18,7 @@ module.exports = (sequelize) => {
     razorpayOrderId: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+      // unique: true
     },
     razorpayPaymentId: {
       type: DataTypes.STRING,
