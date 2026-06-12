@@ -1,29 +1,30 @@
 const express = require('express');
 const router = express.Router();
-
 const { verifyToken, isAdmin } = require('../middleware/auth');
-
+const { uploadSingle } = require('../middleware/upload');
 const {
+  createBlog,
   getAllBlogs,
   getBlogById,
-  createBlog,
   updateBlog,
   deleteBlog,
+  updateBlogStatus,
   incrementBlogViews,
   getBlogViews,
-  getBlogsCount, // Add this controller if needed
+  getBlogsCount
 } = require('../controllers/blogController');
 
-// Public routes
-router.post('/', createBlog);
-router.post('/:id/views', incrementBlogViews);
+// Public routes (no authentication required)
+router.post('/', uploadSingle('image'), createBlog);
 router.get('/:id/views', getBlogViews);
+router.post('/:id/views', incrementBlogViews);
 
-// Protected routes
-router.get('/', verifyToken, isAdmin, getAllBlogs);
+// Admin only routes
+router.get('/',  getAllBlogs);
 router.get('/count', verifyToken, isAdmin, getBlogsCount);
-router.get('/:id', verifyToken, isAdmin, getBlogById);
-router.put('/:id', verifyToken, updateBlog);
+router.get('/:id',  getBlogById);
+router.put('/:id', verifyToken, uploadSingle('image'), updateBlog);
 router.delete('/:id', verifyToken, isAdmin, deleteBlog);
+router.patch('/:id/status', verifyToken, isAdmin, updateBlogStatus);
 
 module.exports = router;

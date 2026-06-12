@@ -30,9 +30,14 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
 
-      tags: {
-        type: DataTypes.JSON,
-        defaultValue: [],
+      // tags: {
+      //   type: DataTypes.JSON,
+      //   defaultValue: [],
+      // },
+
+      image: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
 
       views: {
