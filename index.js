@@ -29,6 +29,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const accessLogRoutes = require('./routes/accessLogRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const blogRoutes = require('./routes/blogRoutes');
 
 const { Error } = require('sequelize');
 
@@ -105,6 +106,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/access-logs', accessLogRoutes);
+app.use('/api/blogs', blogRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

@@ -1,4 +1,4 @@
-const Blog = require('../models/Blog');
+const Blog = require('../models/Blogs');
 
 // @desc    Get all blogs (with pagination)
 const getAllBlogs = async (req, res) => {
@@ -25,6 +25,21 @@ const getAllBlogs = async (req, res) => {
   }
 };
 
+const getBlogsCount = async (req, res) => {
+  try {
+    const count = await Blog.count();
+
+    res.status(200).json({
+      success: true,
+      count,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 // @desc    Get single blog by ID (does NOT increment views anymore)
 const getBlogById = async (req, res) => {
   try {
@@ -136,5 +151,6 @@ module.exports = {
   updateBlog,
   deleteBlog,
   getBlogViews,
+  getBlogsCount,
   incrementBlogViews,   // <-- export new function
 };

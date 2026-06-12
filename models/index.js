@@ -16,6 +16,7 @@ const Transaction = require('./Transaction')(sequelize);
 const VolunteerPreference = require('./VolunteerPreference')(sequelize);
 const Message = require('./Message')(sequelize); // Add this line
 const AccessLog = require('./AccessLog')(sequelize); // Add this line
+const blog = require('./Blogs')(sequelize); // Add this line
 
 // Associations
 Category.hasMany(Volunteer, { foreignKey: 'categoryId' });
@@ -63,5 +64,5 @@ module.exports = {
   BoardMember,
   Transaction,
   VolunteerPreference,
-  AccessLog
+  AccessLog,blog
 };
