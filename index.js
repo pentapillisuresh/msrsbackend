@@ -59,7 +59,7 @@ const corsOptions = {
     if (!origin) return callback(null, true);
 
     const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? ['https://msrsfoundation.org', 'https://admin.msrsfoundation.org']
+      ? ['https://msrsfoundation.org', 'https://admin.msrsfoundation.org','https://www.admin.msrsfoundation.org','https://www.msrsfoundation.org']
       : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:5174','https://msrsfoundation.org', 'https://admin.msrsfoundation.org'];
 
     // Log for debugging
@@ -84,7 +84,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight
+app.options('/{*splat}', cors(corsOptions)); // Handle preflight
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
