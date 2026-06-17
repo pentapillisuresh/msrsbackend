@@ -52,10 +52,31 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration
+// CORS configuration with dynamic origin validation
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://yourdomain.com']
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:5174',],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = process.env.NODE_ENV === 'production'
+      ? ['https://msrsfoundation.org', 'https://admin.msrsfoundation.org']
+      : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:5174','https://msrsfoundation.org', 'https://admin.msrsfoundation.org'];
+
+    // Log for debugging
+    console.log(`CORS request from origin: ${origin}`);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // In production, reject; in dev, allow (or reject, depending on your policy)
+      if (process.env.NODE_ENV === 'production') {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      } else {
+        // Allow all origins in development for convenience
+        callback(null, true);
+      }
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -63,6 +84,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
